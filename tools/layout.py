@@ -21,15 +21,18 @@ def inch(mm): return mm / MM_PER_IN
 # FIT PARAMETERS  --  ASSUMPTIONS. Measure your actual vials and edit these.
 # All dimensions in millimetres.
 # ---------------------------------------------------------------------------
-# vial outer diameter (OD) and full height for each class
+# vial outer diameter (OD), full height, and PER-CLASS diametral clearance for each class.
+# clear = amount ADDED to OD to get the bore; radial gap per side = clear/2.
+#   1ml  +3.0 -> 1.5mm/side (roomy on purpose: doubles as finger-grab room)
+#   10ml +2.0 -> 1.0mm/side (tightened from 3.0 -- fridge fit was loose)
+#   30ml +2.0 -> 1.0mm/side (tightened from 3.0)
+#   syr  +0.0 -> "od" is treated as the target bore directly
 VIAL = {
-    "1ml":  {"od": 16.0, "h": 45.0},   # T single-dose vial (~13-17mm OD typical)
-    "10ml": {"od": 23.0, "h": 55.0},   # T multidose 10mL (proven peptide holder used 22.5)
-    "30ml": {"od": 33.0, "h": 78.0},   # 30mL multidose (proven holder used 32.0)
-    "syr":  {"od": 14.0, "h": 65.0},   # 3mL syringe BARREL standing (no long needle) -- see README
+    "1ml":  {"od": 16.0, "h": 45.0, "clear": 3.0},   # T single-dose vial (~13-17mm OD typical)
+    "10ml": {"od": 23.0, "h": 55.0, "clear": 2.0},   # T multidose 10mL (proven peptide holder used 22.5)
+    "30ml": {"od": 33.0, "h": 78.0, "clear": 2.0},   # 30mL multidose (proven holder used 32.0)
+    "syr":  {"od": 14.0, "h": 65.0, "clear": 0.0},   # 3mL syringe BARREL standing (no long needle)
 }
-DIA_CLEAR = 3.0        # added to OD -> bore diameter (radial slop 1.5mm/side)
-SYR_CLEAR = 0.0        # syringe "od" already treated as target bore
 INNER_GAP = 2.0        # extra bore depth below vial bottom (crumb / tolerance)
 
 # structural
@@ -78,9 +81,7 @@ DESIGNS = {
 
 # ---------------------------------------------------------------------------
 def bore_of(t):
-    if t == "syr":
-        return VIAL["syr"]["od"] + SYR_CLEAR
-    return VIAL[t]["od"] + DIA_CLEAR
+    return VIAL[t]["od"] + VIAL[t]["clear"]
 
 def pitch_of(t):
     # centre-to-centre within a zone grid

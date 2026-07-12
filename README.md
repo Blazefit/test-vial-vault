@@ -19,11 +19,11 @@ filament (black/dark) and every vial is shaded from light.
 | 1 mL vials | 8 | 10 | 12 |
 | Syringes (2×2) | 4 | 4 | 4 |
 | Carry hand-slots | — | ✓ | ✓ |
-| Tray (in) | 5.35 × 7.17 × 3.74 | 6.55 × 7.17 × 3.74 | 7.76 × 7.17 × 3.74 |
-| Tray (mm) | 135.8 × 182.2 × 95.0 | 166.4 × 182.2 × 95.0 | 197.0 × 182.2 × 95.0 |
-| Fits 220 mm bed | ✓ | ✓ | ✓ (17 mm margin) |
+| Tray (in) | 5.19 × 7.09 × 3.74 | 6.35 × 7.09 × 3.74 | 7.52 × 7.09 × 3.74 |
+| Tray (mm) | 131.8 × 180.2 × 95.0 | 161.4 × 180.2 × 95.0 | 191.0 × 180.2 × 95.0 |
+| Fits 220 mm bed | ✓ | ✓ | ✓ (23 mm margin) |
 | Light-tightness | **fully sealed** (genus 0) | 2 top hand-slots* | 2 top hand-slots* |
-| ~PETG (tray+lid) | ~314 g | ~365 g | ~429 g |
+| ~PETG (tray+lid) | ~308 g | ~357 g | ~418 g |
 
 \* The hand-slots open into the interior cavity only. Every vial sits inside its **own opaque
 sleeve** (2 mm wall, rim above the vial top), so the slots never expose a vial to light.

@@ -17,6 +17,8 @@ means all HARD checks cleared for A, B, and C.
 | 9 | Mesh-volume/mass reporting; rejected side lightening windows | needed print-budget; windows would leak light (kills the "dark" requirement) → opaque walls + 15% infill instead | trays ~275–380 g |
 | 10 | Full rebuild + verify all 6 parts (bbox MATCH + manifold + genus) | final gate | **A/B/C tray+lid all PASS**; genus: A_tray 0 (fully light-tight), B/C_tray 2 (only the 2 hand-slots), all lids 0 |
 
+| 11 | Tightened 10 mL & 30 mL clearance 3.0 → 2.0 mm (per-class); 1 mL & syr unchanged | fridge-holder fit was loose (1.5 mm/side); the vault was even looser. Now 1.0 mm/side — snug but one-handed | **PASS**; trays ~4–6 mm smaller, bbox re-MATCH, genus preserved (A 0 / B,C 2) |
+
 ## Geometry-check summary (final)
 All HARD checks clear for A, B, C:
 - pocket↔pocket wall ≥ 2.5 mm  (actual min 4.6 mm)

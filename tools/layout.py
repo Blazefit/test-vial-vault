@@ -26,12 +26,13 @@ VIAL = {
     "syr":  {"od": 14.0, "h": 65.0, "clear": 0.0},   # 3 mL syringe BARREL, needle off
 }
 
-# --- honeycomb structure ---
+# --- honeycomb structure (reinforced against cold-weather snapping) ---
 PWALL     = 2.0        # tube wall; tubes packed so walls OVERLAP (2*PWALL > web) -> fused
 WEB_MIN   = 3.0        # solid between two adjacent bores (a fused shared wall)
-WALL      = 3.0        # full-height perimeter wall (darkness + lid seat)
+WALL      = 4.0        # full-height perimeter wall -- thickened 3->4 mm (tallest thin wall)
 EDGE_MIN  = 4.5        # bore edge -> outer face (chosen so edge tubes fuse into the wall)
 BASE_T    = 5.0        # solid base slab: every vial rests on it; ties all tube bottoms
+FILLET    = 2.5        # 45-deg fillet at every cell-to-base junction -- kills the snap-point
 RECESS    = 8.0        # vial-top recess below its own cell rim (shade)
 CORNER_R  = 5.0
 ROW_GAP   = 3.0        # between stacked rows (Y) -- <= 2*PWALL so tubes fuse across it
@@ -202,6 +203,7 @@ def emit_scad(design, pockets, outer_w, outer_l, rim):
          f"DESIGN = \"{design}\";",
          f"OUTER_W = {outer_w};", f"OUTER_L = {outer_l};", f"RIM_H = {rim};",
          f"BASE_T = {BASE_T};", f"WALL = {WALL};", f"PWALL = {PWALL};",
+         f"FILLET = {FILLET};",
          f"CORNER_R = {CORNER_R};", f"RECESS = {RECESS};",
          f"LID_GAP = {LID_GAP};", f"SKIRT_W = {SKIRT_W};", f"SKIRT_H = {SKIRT_H};",
          f"ROOF_T = {ROOF_T};",

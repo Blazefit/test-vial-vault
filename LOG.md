@@ -22,6 +22,8 @@ means all HARD checks cleared for A, B, and C.
 | 12 | **Rearchitect: free-standing tubes → monolithic bored block** (denser packing, more openings, mixed-row 2D fill) | user feedback: interior tubes snapped off; too much empty space | **PASS**; A 18→37, C 25→57 openings — but solid block ~700 g (A) / ~980 g (C): too heavy |
 | 13 | **Stepped merged-tube honeycomb**: cells fuse (walls overlap 1 mm), each cell only as tall as its vial; scallops dropped | solid block too heavy; still needed fused (not free-standing) walls + light | **PASS**, genus 0 all parts; mass down ~60% (A ~264 g, C ~383 g tray); `tube-fuse margin −1.0 mm` = nothing free-standing |
 
+| 14 | **Reinforce vs cold-snap:** 45° fillet at every cell→base junction + perimeter wall 3→4 mm; recommend PETG (not PLA) + 4 walls | user: use the lightest that won't snap, reinforce if cold-prone | **PASS**, genus 0; +~25 g only (A 264→286, C 383→409 g tray); footprints unchanged |
+
 ## Geometry-check summary (final — fused honeycomb)
 All HARD checks clear for A, B, C:
 - shared web between adjacent bores ≥ 3.0 mm

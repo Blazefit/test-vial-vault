@@ -31,7 +31,8 @@ forgiving of the unverified OD assumption. Bore mouths are chamfered as a funnel
 |-------|-------|---------|
 | `PWALL` | 2.0 mm | cell wall. Tubes are packed so walls **overlap ~1 mm and fuse** (2·PWALL > web) |
 | `WEB_MIN` | 3.0 mm | solid between two adjacent bores (the shared, fused honeycomb wall) |
-| `WALL` | 3.0 mm | full-height perimeter wall (darkness + lid seat) |
+| `WALL` | 4.0 mm | full-height perimeter wall — thickened 3→4 mm (reinforcement) |
+| `FILLET` | 2.5 mm | 45° fillet at every cell-to-base junction — the anti-snap stress relief |
 | `EDGE_MIN` | 4.5 mm | bore edge → outer face (chosen so edge cells fuse into the wall) |
 | `BASE_T` | 5.0 mm | solid base slab — every vial rests on it; ties all cell bottoms together |
 | `RECESS` | 8.0 mm | vial-top recess below its own cell rim (shade; cell is only vial+8 mm tall) |
@@ -47,9 +48,9 @@ forgiving of the unverified OD assumption. Bore mouths are chamfered as a funnel
 
 | Design | Contents | Block W × L × H (mm) | Block (in) | Lid W × L × H (mm) | Lid (in) | ~PETG (tray+lid) |
 |--------|----------|---------------------|-----------|--------------------|----------|------------------|
-| **A — Compact** | 6×10 mL, 3×30 mL, 24×1 mL, 4 syr | 156 × 166 × 91 | 6.14 × 6.54 × 3.58 | 162 × 172 × 18.6 | 6.38 × 6.77 × 0.73 | ~300 g |
-| **B — Standard** | 8×10 mL, 4×30 mL, 30×1 mL, 4 syr | 192 × 166 × 91 | 7.56 × 6.54 × 3.58 | 198 × 172 × 18.6 | 7.80 × 6.77 × 0.73 | ~370 g |
-| **C — Max** | 10×10 mL, 5×30 mL, 36×1 mL, 6 syr | 204 × 188 × 91 | 8.03 × 7.40 × 3.58 | 210 × 194 × 18.6 | 8.27 × 7.64 × 0.73 | ~440 g |
+| **A — Compact** | 6×10 mL, 3×30 mL, 24×1 mL, 4 syr | 156 × 166 × 91 | 6.14 × 6.54 × 3.58 | 162 × 172 × 18.6 | 6.38 × 6.77 × 0.73 | ~330 g |
+| **B — Standard** | 8×10 mL, 4×30 mL, 30×1 mL, 4 syr | 192 × 166 × 91 | 7.56 × 6.54 × 3.58 | 198 × 172 × 18.6 | 7.80 × 6.77 × 0.73 | ~400 g |
+| **C — Max** | 10×10 mL, 5×30 mL, 36×1 mL, 6 syr | 204 × 188 × 91 | 8.03 × 7.40 × 3.58 | 210 × 194 × 18.6 | 8.27 × 7.64 × 0.73 | ~460 g |
 
 All three are **91 mm (3.58 in) tall** (set by the 30 mL vial). Shorter vials get shorter cells
 inside, so the block is much lighter than a solid one. Every block + its lid fits a 220 mm bed.

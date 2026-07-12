@@ -26,17 +26,28 @@ and add the lift-off lid — every vial sits shaded in its own opaque cell.
 | Block (mm) | 156 × 166 × 91 | 192 × 166 × 91 | 204 × 188 × 91 |
 | Fits 220 mm bed | ✓ | ✓ | ✓ |
 | Light-tightness | genus 0 (sealed) | genus 0 | genus 0 |
-| ~PETG tray+lid @15% | ~300 g | ~370 g | ~440 g |
+| ~PETG tray+lid @15% | ~330 g | ~400 g | ~460 g |
 
 Renders: `renders/{A,C}_top.png` (layout), `{A,C}_tray.png` (3/4), lids, and the fit-audit
 cutaway `renders/C_section.png`.
 
-## Why it's strong now (the honeycomb)
+## Why it's strong now (the honeycomb + reinforcement)
 The earlier revision used individual tubes with gaps between them — interior tubes were
 cantilevered off the base and **snapped off**. This revision packs the cells so their 2 mm
 walls **overlap by ~1 mm and fuse** into a continuous honeycomb (verified: every pocket's
 nearest neighbour overlaps, `tube-fuse margin = −1.0 mm`). Edge cells fuse into the perimeter
 wall; a 5 mm solid base ties every cell bottom together. There are no free-standing walls.
+
+**Reinforced against cold snapping** (the two failure points if it's dropped when cold):
+- **Fillet at every cell-to-base junction** (`FILLET = 2.5 mm`, 45°) — spreads the load out of
+  the sharp root corner where a wall would otherwise crack off. This is the single biggest
+  anti-snap change.
+- **Perimeter wall thickened 3 → 4 mm** — it's the tallest thin wall and takes the drops.
+- Cost of both: only ~25 g more filament.
+
+**Material matters more than geometry for cold brittleness:** print in **PETG** (tough, stays
+that way cold), **not PLA** (PLA is what snaps when cold). If it lives somewhere genuinely cold,
+PETG or ASA. Use **4 wall/perimeter lines** in the slicer — the honeycomb's strength is in its walls.
 
 ## Why every vial stays dark
 1. **Opaque filament** (print black/dark) — walls don't transmit light.
@@ -51,8 +62,9 @@ of riding a tall dead pedestal up to the 91 mm rim. That cut the print mass by ~
 solid block, while keeping full honeycomb strength.
 
 ## Print settings
-- **Material:** PETG (or PLA) in an **opaque dark color** — light-blocking is the point.
-- **Infill:** 12–15 %. **Walls/perimeters: 3** (the honeycomb strength lives in the walls).
+- **Material:** **PETG** in an **opaque dark color** — light-blocking + cold-tough. Avoid PLA if
+  it will ever be cold (that's what snaps).
+- **Infill:** 12–15 %. **Walls/perimeters: 4** (the honeycomb strength lives in the walls).
 - **Supports:** none. Print tray base-down, lid **roof-down** (skirt up).
 - **Bed:** ≤ 220 × 220 mm covers all three. Bore mouths are chamfered for easy drop-in.
 

@@ -15,9 +15,16 @@ module rrect(sx, sy, h, r) {
 }
 
 // full-height tube for one pocket (positive). Cell top = BASE_T + depth.
+// A conical fillet at the base flares the cell where it meets the slab -- this is the
+// stress-relief that stops the wall snapping off its root (worst failure mode when cold).
 module tube(p) {
     x = p[0]; y = p[1]; bore = p[2]; depth = p[3];
-    translate([x, y, 0]) cylinder(d = bore + 2 * PWALL, h = BASE_T + depth);
+    od = bore + 2 * PWALL;
+    translate([x, y, 0]) {
+        cylinder(d = od, h = BASE_T + depth);
+        translate([0, 0, BASE_T])                       // fillet root at the slab top
+            cylinder(d1 = od + 2 * FILLET, d2 = od, h = FILLET);
+    }
 }
 
 // negative: vial cavity (rests on the base slab) + mouth funnel + finger scallop

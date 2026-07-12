@@ -22,8 +22,8 @@ and add the lift-off lid — every vial sits shaded in its own opaque cell.
 | 1 mL vials | 24 | 30 | 36 |
 | Syringes (2×N) | 4 | 4 | 6 |
 | **Total openings** | **37** | **46** | **57** |
-| Block (in) | 6.14 × 6.54 × 3.58 | 7.56 × 6.54 × 3.58 | 8.03 × 7.40 × 3.58 |
-| Block (mm) | 156 × 166 × 91 | 192 × 166 × 91 | 204 × 188 × 91 |
+| Block (in) | 6.07 × 6.44 × 3.58 | 7.57 × 6.44 × 3.58 | 8.03 × 7.30 × 3.58 |
+| Block (mm) | 154 × 164 × 91 | 192 × 164 × 91 | 204 × 186 × 91 |
 | Fits 220 mm bed | ✓ | ✓ | ✓ |
 | Light-tightness | genus 0 (sealed) | genus 0 | genus 0 |
 | ~PETG tray+lid @15% | ~330 g | ~400 g | ~460 g |
@@ -94,7 +94,8 @@ All 6 parts render **manifold / NoError**, **genus 0** (no wall openings), and r
 a neighbour or the wall (no free-standing tubes), all pockets inside the faces, tray+lid fit
 the bed, 5 mm base under every vial, vials recessed 8 mm. See `LOG.md`.
 
-## ⚠️ Fit assumptions to check first
-1 mL 16.0 mm OD · 10 mL 23.0 mm · 30 mL 33.0 mm · syringe cell 14 mm bore × 65 mm
-(barrel/short syringe, **needle off**). 10 mL & 30 mL bores tightened to a 1.0 mm radial gap.
-Details + how to change them: `PARAMS.md`.
+## Fit status
+- **10 mL 21.7 mm · 30 mL 33.1 mm — caliper-verified** (2026-07-12); bores 23.7 / 35.1 mm at a
+  1.0 mm radial gap.
+- **1 mL 16.0 mm · syringe 14 mm bore × 65 mm — still assumed** (barrel/short syringe, needle off).
+  Calipers welcome; both are one-line edits in `tools/layout.py`. Details: `PARAMS.md`.

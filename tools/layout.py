@@ -20,10 +20,10 @@ def inch(mm): return mm / MM_PER_IN
 # FIT PARAMETERS  --  ASSUMPTIONS. Measure your vials and edit these.  (mm)
 # ---------------------------------------------------------------------------
 VIAL = {
-    "1ml":  {"od": 16.0, "h": 45.0, "clear": 3.0},   # roomy (finger-grab room)
-    "10ml": {"od": 23.0, "h": 55.0, "clear": 2.0},   # tightened -> 1.0 mm/side
-    "30ml": {"od": 33.0, "h": 78.0, "clear": 2.0},   # tightened -> 1.0 mm/side
-    "syr":  {"od": 14.0, "h": 65.0, "clear": 0.0},   # 3 mL syringe BARREL, needle off
+    "1ml":  {"od": 16.0, "h": 45.0, "clear": 3.0},   # ASSUMED (not yet calipered)
+    "10ml": {"od": 21.7, "h": 55.0, "clear": 2.0},   # CALIPER-VERIFIED 2026-07-12 -> bore 23.7 (1.0 mm/side)
+    "30ml": {"od": 33.1, "h": 78.0, "clear": 2.0},   # CALIPER-VERIFIED 2026-07-12 -> bore 35.1 (1.0 mm/side)
+    "syr":  {"od": 14.0, "h": 65.0, "clear": 0.0},   # ASSUMED 3 mL syringe BARREL, needle off
 }
 
 # --- honeycomb structure (reinforced against cold-weather snapping) ---

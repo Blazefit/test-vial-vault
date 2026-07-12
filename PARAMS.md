@@ -8,12 +8,12 @@ regenerate every design. Dimensions below are given in **mm and inches**.
 These are the numbers most likely to be wrong for *your* vials. They are set generously,
 but measure your actual product and edit `VIAL` / `DIA_CLEAR` in `tools/layout.py`.
 
-| Item | Assumed OD | Assumed height | Bore (hole) cut | Radial gap | Notes |
+| Item | OD | Height | Bore (hole) cut | Radial gap | Notes |
 |------|-----------|----------------|-----------------|-----------|-------|
-| **1 mL vial** | 16.0 mm (0.63 in) | 45 mm (1.77 in) | 19.0 mm (0.75 in) | 1.5 mm/side | roomy on purpose — doubles as finger-grab room for a tiny vial |
-| **10 mL vial** | 23.0 mm (0.91 in) | 55 mm (2.17 in) | **25.0 mm (0.98 in)** | **1.0 mm/side** | tightened from 26.0 (fridge fit was loose) |
-| **30 mL vial** | 33.0 mm (1.30 in) | 78 mm (3.07 in) | **35.0 mm (1.38 in)** | **1.0 mm/side** | tightened from 36.0 (fridge fit was loose) |
-| **Syringe (2×2)** | 14.0 mm bore | 65 mm (2.56 in) | 14.0 mm (0.55 in) | — | **assumes barrel / short syringe standing, plunger up** |
+| **1 mL vial** | 16.0 mm (0.63 in) *(assumed)* | 45 mm (1.77 in) | 19.0 mm (0.75 in) | 1.5 mm/side | roomy on purpose — doubles as finger-grab room for a tiny vial |
+| **10 mL vial** | **21.7 mm** ✓calipered | 55 mm (2.17 in) | **23.7 mm (0.93 in)** | **1.0 mm/side** | measured 2026-07-12 |
+| **30 mL vial** | **33.1 mm** ✓calipered | 78 mm (3.07 in) | **35.1 mm (1.38 in)** | **1.0 mm/side** | measured 2026-07-12 |
+| **Syringe (2×2)** | 14.0 mm bore *(assumed)* | 65 mm (2.56 in) | 14.0 mm (0.55 in) | — | **assumes barrel / short syringe standing, plunger up** |
 
 **Syringe caveat:** a 3 mL syringe *with a long needle + cap* is ~90–115 mm — taller than
 the box. The 2×2 pockets are sized for **barrels stored plunger-up (needle off)**. If you
@@ -48,9 +48,11 @@ forgiving of the unverified OD assumption. Bore mouths are chamfered as a funnel
 
 | Design | Contents | Block W × L × H (mm) | Block (in) | Lid W × L × H (mm) | Lid (in) | ~PETG (tray+lid) |
 |--------|----------|---------------------|-----------|--------------------|----------|------------------|
-| **A — Compact** | 6×10 mL, 3×30 mL, 24×1 mL, 4 syr | 156 × 166 × 91 | 6.14 × 6.54 × 3.58 | 162 × 172 × 18.6 | 6.38 × 6.77 × 0.73 | ~330 g |
-| **B — Standard** | 8×10 mL, 4×30 mL, 30×1 mL, 4 syr | 192 × 166 × 91 | 7.56 × 6.54 × 3.58 | 198 × 172 × 18.6 | 7.80 × 6.77 × 0.73 | ~400 g |
-| **C — Max** | 10×10 mL, 5×30 mL, 36×1 mL, 6 syr | 204 × 188 × 91 | 8.03 × 7.40 × 3.58 | 210 × 194 × 18.6 | 8.27 × 7.64 × 0.73 | ~460 g |
+| **A — Compact** | 6×10 mL, 3×30 mL, 24×1 mL, 4 syr | 154 × 164 × 91 | 6.07 × 6.44 × 3.58 | 160 × 170 × 18.6 | 6.31 × 6.67 × 0.73 | ~320 g |
+| **B — Standard** | 8×10 mL, 4×30 mL, 30×1 mL, 4 syr | 192 × 164 × 91 | 7.57 × 6.44 × 3.58 | 198 × 170 × 18.6 | 7.81 × 6.67 × 0.73 | ~395 g |
+| **C — Max** | 10×10 mL, 5×30 mL, 36×1 mL, 6 syr | 204 × 186 × 91 | 8.03 × 7.30 × 3.58 | 210 × 192 × 18.6 | 8.27 × 7.54 × 0.73 | ~455 g |
+
+*(10 mL & 30 mL now caliper-verified; sizes updated from the earlier estimate.)*
 
 All three are **91 mm (3.58 in) tall** (set by the 30 mL vial). Shorter vials get shorter cells
 inside, so the block is much lighter than a solid one. Every block + its lid fits a 220 mm bed.

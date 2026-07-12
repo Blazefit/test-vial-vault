@@ -24,6 +24,8 @@ means all HARD checks cleared for A, B, and C.
 
 | 14 | **Reinforce vs cold-snap:** 45° fillet at every cell→base junction + perimeter wall 3→4 mm; recommend PETG (not PLA) + 4 walls | user: use the lightest that won't snap, reinforce if cold-prone | **PASS**, genus 0; +~25 g only (A 264→286, C 383→409 g tray); footprints unchanged |
 
+| 15 | **Caliper-verified 10 mL (21.7 mm) & 30 mL (33.1 mm)** ODs → bores 23.7 / 35.1 mm; Design A chosen for print | Jason measured his vials + picked A | **PASS**, A re-exported: 154 × 164 × 91 mm, genus 0, bbox MATCH, ~282 g tray |
+
 ## Geometry-check summary (final — fused honeycomb)
 All HARD checks clear for A, B, C:
 - shared web between adjacent bores ≥ 3.0 mm

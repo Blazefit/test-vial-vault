@@ -8,14 +8,18 @@ and are fully light-tight (genus 0).
 
 ---
 
-## A — Compact Honeycomb
-**37 cells:** 6×10 mL · 3×30 mL · 24×1 mL · 4 syringe — **156 × 166 × 91 mm (6.14 × 6.54 × 3.58 in)** — ~330 g PETG
+## A — Compact Honeycomb ⭐ chosen to print
+**37 cells:** 6×10 mL · 3×30 mL · 24×1 mL · 4 syringe — **154 × 164 × 91 mm (6.07 × 6.44 × 3.58 in)** — ~320 g PETG
+*(10 mL & 30 mL fits caliper-verified 2026-07-12)*
 
 Top-down (layout):
 ![A top-down](renders/A_top.png)
 
 3/4 view (fused honeycomb):
 ![A 3/4](renders/A_tray.png)
+
+Cutaway — vials rest on the base, each in its own cell (red = reference vials):
+![A cutaway](renders/A_section.png)
 
 Lid (prints roof-down):
 ![A lid](renders/A_lid.png)

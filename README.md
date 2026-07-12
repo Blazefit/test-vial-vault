@@ -1,50 +1,59 @@
 # Testosterone Vial Vault — dark room-temp storage
 
 3D-printable, **light-blocking** storage for testosterone vials + syringes, kept at **room
-temperature** (not fridge/freezer). Three designs at different capacities — **pick one**.
-Each is a tray of individual opaque vial sleeves + a lift-off lid; print in an opaque
-filament (black/dark) and every vial is shaded from light.
+temperature** (not fridge/freezer). Three sizes at different capacities — **pick one**.
 
-> **These are engineering models, not medical advice.** Verify vial fit with calipers
-> before printing a full set (see `PARAMS.md`).
+Every pocket is a cell in a **fused honeycomb**: the cell walls overlap and join into one
+continuous structure (nothing is a free-standing tube that can snap off), and each cell is
+only as **tall as its own vial** so the block stays light. Print in an opaque dark filament
+and add the lift-off lid — every vial sits shaded in its own opaque cell.
+
+> **Engineering models, not medical advice.** Verify vial fit with calipers before printing a
+> full set (see `PARAMS.md`).
 
 ---
 
 ## Pick a design
 
-| | **A — Compact Slab** | **B — Caddy (grips)** | **C — Max Vault** |
+| | **A — Compact** | **B — Standard** | **C — Max** |
 |---|---|---|---|
-| 10 mL vials | 4 | 5 | 6 |
-| 30 mL vials | 2 | 2 | 3 |
-| 1 mL vials | 8 | 10 | 12 |
-| Syringes (2×2) | 4 | 4 | 4 |
-| Carry hand-slots | — | ✓ | ✓ |
-| Tray (in) | 5.19 × 7.09 × 3.74 | 6.35 × 7.09 × 3.74 | 7.52 × 7.09 × 3.74 |
-| Tray (mm) | 131.8 × 180.2 × 95.0 | 161.4 × 180.2 × 95.0 | 191.0 × 180.2 × 95.0 |
-| Fits 220 mm bed | ✓ | ✓ | ✓ (23 mm margin) |
-| Light-tightness | **fully sealed** (genus 0) | 2 top hand-slots* | 2 top hand-slots* |
-| ~PETG (tray+lid) | ~308 g | ~357 g | ~418 g |
+| 10 mL vials | 6 | 8 | 10 |
+| 30 mL vials | 3 | 4 | 5 |
+| 1 mL vials | 24 | 30 | 36 |
+| Syringes (2×N) | 4 | 4 | 6 |
+| **Total openings** | **37** | **46** | **57** |
+| Block (in) | 6.14 × 6.54 × 3.58 | 7.56 × 6.54 × 3.58 | 8.03 × 7.40 × 3.58 |
+| Block (mm) | 156 × 166 × 91 | 192 × 166 × 91 | 204 × 188 × 91 |
+| Fits 220 mm bed | ✓ | ✓ | ✓ |
+| Light-tightness | genus 0 (sealed) | genus 0 | genus 0 |
+| ~PETG tray+lid @15% | ~300 g | ~370 g | ~440 g |
 
-\* The hand-slots open into the interior cavity only. Every vial sits inside its **own opaque
-sleeve** (2 mm wall, rim above the vial top), so the slots never expose a vial to light.
-If you want zero openings, choose **A**.
+Renders: `renders/{A,C}_top.png` (layout), `{A,C}_tray.png` (3/4), lids, and the fit-audit
+cutaway `renders/C_section.png`.
 
-Renders: `renders/A_tray.png`, `B_tray.png`, `C_tray.png`, lids, and the fit-audit cutaway
-`renders/C_section.png`.
+## Why it's strong now (the honeycomb)
+The earlier revision used individual tubes with gaps between them — interior tubes were
+cantilevered off the base and **snapped off**. This revision packs the cells so their 2 mm
+walls **overlap by ~1 mm and fuse** into a continuous honeycomb (verified: every pocket's
+nearest neighbour overlaps, `tube-fuse margin = −1.0 mm`). Edge cells fuse into the perimeter
+wall; a 5 mm solid base ties every cell bottom together. There are no free-standing walls.
 
-## How it keeps things dark
-1. **Opaque filament** (print black or another dark color) — walls don't transmit light.
-2. **Per-vial sleeves** — each vial drops into its own tube; the tube rim sits ~2 mm above
-   the vial top, so vials are shaded even with the lid off.
-3. **Lift-off lid** — full opaque cover with a 15 mm skirt; covers the open top completely.
-4. Vials rest on stepped pedestals so all tops sit **10 mm below the rim** (shaded + the lid
-   clears them).
+## Why every vial stays dark
+1. **Opaque filament** (print black/dark) — walls don't transmit light.
+2. **Own opaque cell** — each vial is walled on all sides; the cell rim sits ~8 mm above the
+   vial top.
+3. **Solid base + perimeter wall + lift-off lid** — the box is closed on all six sides;
+   genus 0 means there is not a single through-hole in any wall.
+
+## Stepped cells = lighter
+Each cell is only `vial height + 8 mm` tall, so a 45 mm 1 mL vial gets a ~53 mm cell instead
+of riding a tall dead pedestal up to the 91 mm rim. That cut the print mass by ~60 % versus a
+solid block, while keeping full honeycomb strength.
 
 ## Print settings
-- **Material:** PETG or PLA in an **opaque dark color** (light-blocking is the whole point).
-- **Infill:** 15 % (the pedestals are modeled solid; infill makes them light — mass figures
-  above assume 15 %).
-- **Supports:** none needed. Print tray base-down, lid **roof-down** (skirt up).
+- **Material:** PETG (or PLA) in an **opaque dark color** — light-blocking is the point.
+- **Infill:** 12–15 %. **Walls/perimeters: 3** (the honeycomb strength lives in the walls).
+- **Supports:** none. Print tray base-down, lid **roof-down** (skirt up).
 - **Bed:** ≤ 220 × 220 mm covers all three. Bore mouths are chamfered for easy drop-in.
 
 ## Files
@@ -56,23 +65,24 @@ tools/verify_bbox.py   parse STL: bbox match, mesh volume, mass
 build/                 auto-generated per-design geometry + part wrappers
 stl/  renders/         print files + images
 PARAMS.md              every dimension in mm + inches, with the fit assumptions
-LOG.md                 the 10-iteration refinement log + geometry-check summary
+LOG.md                 iteration log + geometry-check summary
 ```
 
 ## Regenerate / retune
 ```bash
-# 1. edit vial sizes in tools/layout.py (VIAL, DIA_CLEAR) if your calipers disagree
+# edit vial sizes / counts in tools/layout.py, then:
 python3 tools/layout.py all      # runs all geometry checks, writes build/
 bash   tools/build_all.sh        # renders stl/ + renders/
 python3 tools/verify_bbox.py stl/C_tray.stl   # bbox + mass sanity
 ```
 
-## Verification (all designs, final)
-- All 6 parts render **manifold / NoError**; rendered bbox **matches** the computed envelope.
-- Geometry checks pass: pocket walls ≥ 4.6 mm, all pockets inside the perimeter, tray+lid fit
-  the bed, 30 mL pedestal ≥ 4 mm, vial tops recessed 10 mm, scallops don't breach, each vial
-  fully sleeved. See `LOG.md`.
+## Verification (final)
+All 6 parts render **manifold / NoError**, **genus 0** (no wall openings), and rendered bbox
+**matches** the computed envelope. Geometry checks pass: shared webs ≥ 3 mm, every cell fuses
+a neighbour or the wall (no free-standing tubes), all pockets inside the faces, tray+lid fit
+the bed, 5 mm base under every vial, vials recessed 8 mm. See `LOG.md`.
 
 ## ⚠️ Fit assumptions to check first
-1 mL 16.0 mm OD · 10 mL 23.0 mm · 30 mL 33.0 mm · syringe pocket 14 mm bore × 65 mm
-(barrel/short syringe, **needle off**). Full details + how to change them: `PARAMS.md`.
+1 mL 16.0 mm OD · 10 mL 23.0 mm · 30 mL 33.0 mm · syringe cell 14 mm bore × 65 mm
+(barrel/short syringe, **needle off**). 10 mL & 30 mL bores tightened to a 1.0 mm radial gap.
+Details + how to change them: `PARAMS.md`.

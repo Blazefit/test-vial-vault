@@ -19,19 +19,21 @@ means all HARD checks cleared for A, B, and C.
 
 | 11 | Tightened 10 mL & 30 mL clearance 3.0 → 2.0 mm (per-class); 1 mL & syr unchanged | fridge-holder fit was loose (1.5 mm/side); the vault was even looser. Now 1.0 mm/side — snug but one-handed | **PASS**; trays ~4–6 mm smaller, bbox re-MATCH, genus preserved (A 0 / B,C 2) |
 
-## Geometry-check summary (final)
-All HARD checks clear for A, B, C:
-- pocket↔pocket wall ≥ 2.5 mm  (actual min 4.6 mm)
-- every pocket inside the perimeter wall
-- tray **and** lid fit the 220 × 220 mm bed
-- pedestal under the 30 mL (deepest) vial ≥ 4.0 mm
-- rim covers the tallest vial + headroom; vial tops recessed 10.0 mm (shaded, lid clears)
-- finger scallops point inward — no perimeter breach
-- light-tightness: each vial fully enclosed by its own opaque sleeve; tray genus = intended openings only
+| 12 | **Rearchitect: free-standing tubes → monolithic bored block** (denser packing, more openings, mixed-row 2D fill) | user feedback: interior tubes snapped off; too much empty space | **PASS**; A 18→37, C 25→57 openings — but solid block ~700 g (A) / ~980 g (C): too heavy |
+| 13 | **Stepped merged-tube honeycomb**: cells fuse (walls overlap 1 mm), each cell only as tall as its vial; scallops dropped | solid block too heavy; still needed fused (not free-standing) walls + light | **PASS**, genus 0 all parts; mass down ~60% (A ~264 g, C ~383 g tray); `tube-fuse margin −1.0 mm` = nothing free-standing |
 
-## A note on the "10 iterations"
-These are ten *real* refinement passes, not cosmetic version bumps. Iterations 1–3 fixed
-genuine geometry faults the checker caught (pedestal thickness, bed overrun, thin bed
-margin). 4–7 hardened fit/usability/light-tightness. 8–10 added verification tooling and a
-final full-mesh audit. Re-run any of it with `python3 tools/layout.py all` then
-`bash tools/build_all.sh`.
+## Geometry-check summary (final — fused honeycomb)
+All HARD checks clear for A, B, C:
+- shared web between adjacent bores ≥ 3.0 mm
+- **fusion:** every cell overlaps a neighbour or the perimeter wall (`tube-fuse margin −1.0 mm`)
+  → no free-standing tubes (the thing that snapped off before)
+- every bore ≥ 4.5 mm from the outer face; block **and** lid fit the 220 × 220 mm bed
+- 5 mm solid base under every vial; vials recessed 8 mm in their own cell
+- light-tightness: all 6 parts **genus 0** — not one through-hole in any wall
+
+## Notes on the iterations
+1–10 built and hardened the original per-tube design (real geometry fixes: pedestal
+thickness, bed overrun, thin margins, fit/light-tightness). 11 tightened the 10/30 mL fits.
+12–13 are the architecture change from user feedback: tubes snapped off and left dead space,
+so it was reworked into a denser **fused honeycomb** (12), then made **stepped + light** (13).
+Re-run any of it with `python3 tools/layout.py all` then `bash tools/build_all.sh`.

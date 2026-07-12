@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """
-Vial-Vault layout + geometry engine.
+Vial-Vault layout + geometry engine  --  MERGED-TUBE HONEYCOMB rev.
 
-Single source of truth for:
-  - vial / syringe fit parameters (ASSUMPTIONS -- caliper-verify, edit here)
-  - pocket placement (row-packed zones) for designs A / B / C
-  - geometry validation (overlaps, wall thickness, bed fit, floor thickness, lid fit)
-  - emission of build/<D>_geom.scad + tray/lid wrapper part files
+Structure: a solid base slab + full-height perimeter wall, with one tube per pocket.
+Tubes are packed so their walls OVERLAP and fuse into a continuous honeycomb -- every
+pocket is braced by its neighbours (and edge pockets fuse into the wall), so nothing is
+a free-standing tube that can snap off. Each tube is only as TALL as its own vial needs
+(stepped), so the dead mass under short vials is gone -> far lighter than a solid block.
 
+Single source of truth for fit params, placement, geometry checks, and SCAD emission.
 Run:  python3 tools/layout.py [A|B|C|all]
-Prints a check report (mm + inches) and writes build/ files.
-Exit code is non-zero if any HARD geometry check fails.
 """
 import sys, math, os
 
@@ -18,300 +17,230 @@ MM_PER_IN = 25.4
 def inch(mm): return mm / MM_PER_IN
 
 # ---------------------------------------------------------------------------
-# FIT PARAMETERS  --  ASSUMPTIONS. Measure your actual vials and edit these.
-# All dimensions in millimetres.
+# FIT PARAMETERS  --  ASSUMPTIONS. Measure your vials and edit these.  (mm)
 # ---------------------------------------------------------------------------
-# vial outer diameter (OD), full height, and PER-CLASS diametral clearance for each class.
-# clear = amount ADDED to OD to get the bore; radial gap per side = clear/2.
-#   1ml  +3.0 -> 1.5mm/side (roomy on purpose: doubles as finger-grab room)
-#   10ml +2.0 -> 1.0mm/side (tightened from 3.0 -- fridge fit was loose)
-#   30ml +2.0 -> 1.0mm/side (tightened from 3.0)
-#   syr  +0.0 -> "od" is treated as the target bore directly
 VIAL = {
-    "1ml":  {"od": 16.0, "h": 45.0, "clear": 3.0},   # T single-dose vial (~13-17mm OD typical)
-    "10ml": {"od": 23.0, "h": 55.0, "clear": 2.0},   # T multidose 10mL (proven peptide holder used 22.5)
-    "30ml": {"od": 33.0, "h": 78.0, "clear": 2.0},   # 30mL multidose (proven holder used 32.0)
-    "syr":  {"od": 14.0, "h": 65.0, "clear": 0.0},   # 3mL syringe BARREL standing (no long needle)
+    "1ml":  {"od": 16.0, "h": 45.0, "clear": 3.0},   # roomy (finger-grab room)
+    "10ml": {"od": 23.0, "h": 55.0, "clear": 2.0},   # tightened -> 1.0 mm/side
+    "30ml": {"od": 33.0, "h": 78.0, "clear": 2.0},   # tightened -> 1.0 mm/side
+    "syr":  {"od": 14.0, "h": 65.0, "clear": 0.0},   # 3 mL syringe BARREL, needle off
 }
-INNER_GAP = 2.0        # extra bore depth below vial bottom (crumb / tolerance)
 
-# structural
-PWALL      = 2.0       # thin wall of each pocket tube
-WALL       = 3.0       # perimeter wall thickness
-BASE_T     = 3.0       # solid base slab under everything
-MIN_WALL   = 2.5       # required plastic between two adjacent bores (HARD check)
-MIN_FLOOR  = 4.0       # required solid pedestal under the deepest (30mL) vial (HARD)
-CORNER_R   = 4.0       # tray outer corner radius
-TOP_GAP    = 8.0       # recess of vial tops below the tray rim (shade + lid clearance)
+# --- honeycomb structure ---
+PWALL     = 2.0        # tube wall; tubes packed so walls OVERLAP (2*PWALL > web) -> fused
+WEB_MIN   = 3.0        # solid between two adjacent bores (a fused shared wall)
+WALL      = 3.0        # full-height perimeter wall (darkness + lid seat)
+EDGE_MIN  = 4.5        # bore edge -> outer face (chosen so edge tubes fuse into the wall)
+BASE_T    = 5.0        # solid base slab: every vial rests on it; ties all tube bottoms
+RECESS    = 8.0        # vial-top recess below its own cell rim (shade)
+CORNER_R  = 5.0
+ROW_GAP   = 3.0        # between stacked rows (Y) -- <= 2*PWALL so tubes fuse across it
+COL_GAP   = 3.0        # between side-by-side grids (X)
 
-# lid (lift-off, over-the-top; opaque filament -> darkness)
-LID_GAP    = 0.4       # radial clearance skirt<->tray outer wall
-SKIRT_W    = 2.4       # lid skirt wall thickness
-SKIRT_H    = 15.0      # how far the skirt descends over the tray (grip depth)
-ROOF_T     = 2.4       # lid roof plate thickness
+# lid (lift-off, opaque -> darkness)
+LID_GAP  = 0.4
+SKIRT_W  = 2.6
+SKIRT_H  = 16.0
+ROOF_T   = 2.6
 
-# print bed usable area (edit to your printer). HARD check: tray+lid must fit.
 BED_X, BED_Y = 220.0, 220.0
-
-MARGIN     = 4.0       # inner margin between pocket field and perimeter wall
-ZONE_GAP   = 5.0       # gap between stacked zones (Y)
-FINGER_SCALLOP = True  # side notch on 1ml + syr pockets for retrieval
+# Stepped cells only recess a vial ~8 mm below its own rim, so a vial is easy to pinch
+# without a finger notch. Scallops off -> fully light-tight (genus 0). Flip on if you
+# want the notch back (it opens a pocket into an interior void: harmless but genus 1).
+FINGER_SCALLOP = False
 
 # ---------------------------------------------------------------------------
-# DESIGN definitions: ordered zones, each = (type, count, cols) stacked in +Y.
-# features: hand slots in end walls (caddy/tote), label ledge.
+# DESIGNS: list of ROWS (stacked +Y). Each row = list of GRIDS (side-by-side X).
+# grid = (type, nrows, ncols).
 # ---------------------------------------------------------------------------
 DESIGNS = {
-    "A": {  # Compact slab tray
-        "zones": [("30ml", 2, 2), ("10ml", 4, 4), ("syr", 4, 2), ("1ml", 8, 4)],
-        "hand_slots": False,
-        "name": "Compact Slab Tray",
-    },
-    "B": {  # Caddy with hand slots
-        "zones": [("30ml", 2, 2), ("10ml", 5, 5), ("syr", 4, 2), ("1ml", 10, 5)],
-        "hand_slots": True,
-        "name": "Caddy (tote grips)",
-    },
-    "C": {  # Max vault -- 10mL in a single back row of 6 -> squarer, more bed margin
-        "zones": [("30ml", 3, 3), ("10ml", 6, 6), ("syr", 4, 2), ("1ml", 12, 6)],
-        "hand_slots": True,
-        "name": "Max Vault",
-    },
+    "A": {"name": "Compact Honeycomb", "rows": [
+            [("30ml", 1, 3), ("syr", 2, 2)],
+            [("10ml", 2, 3), ("1ml", 2, 3)],
+            [("1ml", 3, 6)],
+        ]},
+    "B": {"name": "Standard Honeycomb", "rows": [
+            [("30ml", 1, 4), ("syr", 2, 2)],
+            [("10ml", 2, 4), ("1ml", 2, 3)],
+            [("1ml", 3, 8)],
+        ]},
+    "C": {"name": "Max Honeycomb", "rows": [
+            [("30ml", 1, 5)],
+            [("10ml", 2, 5), ("syr", 2, 3)],
+            [("1ml", 4, 9)],
+        ]},
 }
 
 # ---------------------------------------------------------------------------
-def bore_of(t):
-    return VIAL[t]["od"] + VIAL[t]["clear"]
-
-def pitch_of(t):
-    # centre-to-centre within a zone grid
-    return bore_of(t) + 2 * PWALL + (MIN_WALL - 2 * PWALL if MIN_WALL > 2 * PWALL else 0.6)
+def bore_of(t):   return VIAL[t]["od"] + VIAL[t]["clear"]
+def pitch_of(t):  return bore_of(t) + WEB_MIN
+def depth_of(t):  return VIAL[t]["h"] + RECESS          # bore depth = cell height above base
+def tube_od(t):   return bore_of(t) + 2 * PWALL
 
 def rim_height():
-    # rim so that: base + pedestal(>=MIN_FLOOR) + INNER_GAP + tallest vial + TOP_GAP
-    # (INNER_GAP is bored below the vial, so it eats into the pedestal -> must be added)
-    tallest = max(v["h"] for v in VIAL.values())
-    return BASE_T + MIN_FLOOR + INNER_GAP + tallest + TOP_GAP
+    return BASE_T + max(v["h"] for v in VIAL.values()) + RECESS
+
+def grid_size(t, nr, nc):
+    p = pitch_of(t); b = bore_of(t)
+    return ((nc - 1) * p + b, (nr - 1) * p + b)
+
+def counts(design):
+    c = {}
+    for row in DESIGNS[design]["rows"]:
+        for (t, r, cc) in row:
+            c[t] = c.get(t, 0) + r * cc
+    return c
 
 def build_pockets(design):
-    """Return (pockets, outer_w, outer_l). pockets: list of dicts x,y,type,bore,depth."""
-    zones = DESIGNS[design]["zones"]
+    rows = DESIGNS[design]["rows"]
     rim = rim_height()
-    top_plane = rim - TOP_GAP                      # common plane of all vial tops
-    # --- size each zone grid ---
     laid = []
-    max_w = 0.0
-    for (t, count, cols) in zones:
-        rows = math.ceil(count / cols)
-        px = pitch_of(t)
-        zw = (cols - 1) * px + bore_of(t) + 2 * PWALL      # zone width (X)
-        zl = (rows - 1) * px + bore_of(t) + 2 * PWALL      # zone length (Y)
-        laid.append({"t": t, "count": count, "cols": cols, "rows": rows,
-                     "px": px, "zw": zw, "zl": zl})
-        max_w = max(max_w, zw)
-    total_l = sum(z["zl"] for z in laid) + ZONE_GAP * (len(laid) - 1)
-    outer_w = max_w + 2 * (WALL + MARGIN)
-    outer_l = total_l + 2 * (WALL + MARGIN)
+    for row in rows:
+        grids, rw, rl = [], 0.0, 0.0
+        for (t, nr, nc) in row:
+            gw, gl = grid_size(t, nr, nc)
+            grids.append({"t": t, "nr": nr, "nc": nc, "gw": gw, "gl": gl})
+            rw += gw; rl = max(rl, gl)
+        rw += COL_GAP * (len(row) - 1)
+        laid.append({"grids": grids, "rw": rw, "rl": rl})
+    field_w = max(r["rw"] for r in laid)
+    total_l = sum(r["rl"] for r in laid) + ROW_GAP * (len(laid) - 1)
+    outer_w = field_w + 2 * EDGE_MIN
+    outer_l = total_l + 2 * EDGE_MIN
 
-    # --- place pockets, zones stacked front(-Y) to back(+Y), each grid centred in X ---
     pockets = []
     y_cursor = -total_l / 2.0
-    for z in laid:
-        t = z["t"]
-        depth = VIAL[t]["h"] + INNER_GAP
-        n = 0
-        # zone's own local origin: grid centred in X, spanning zl in Y from y_cursor
-        gx0 = -((z["cols"] - 1) * z["px"]) / 2.0
-        gy0 = y_cursor + (bore_of(t) / 2 + PWALL)
-        for r in range(z["rows"]):
-            for c in range(z["cols"]):
-                if n >= z["count"]:
-                    break
-                x = gx0 + c * z["px"]
-                y = gy0 + r * z["px"]
-                # scallop points toward box centre (0,0) so it never faces the perimeter
-                ang = math.degrees(math.atan2(-y, -x)) if (abs(x) + abs(y)) > 1e-6 else 0.0
-                pockets.append({"x": round(x, 3), "y": round(y, 3), "type": t,
-                                "bore": round(bore_of(t), 3), "depth": round(depth, 3),
-                                "vial_h": VIAL[t]["h"], "scallop_ang": round(ang, 1),
-                                "top_plane": top_plane})
-                n += 1
-        y_cursor += z["zl"] + ZONE_GAP
-    return pockets, round(outer_w, 3), round(outer_l, 3), rim, top_plane
+    for r in laid:
+        band_cy = y_cursor + r["rl"] / 2.0
+        x_cursor = -r["rw"] / 2.0
+        for g in r["grids"]:
+            t = g["t"]; p = pitch_of(t); b = bore_of(t); dep = depth_of(t)
+            gcx = x_cursor + g["gw"] / 2.0
+            for ri in range(g["nr"]):
+                for ci in range(g["nc"]):
+                    x = gcx - (g["nc"] - 1) * p / 2.0 + ci * p
+                    y = band_cy - (g["nr"] - 1) * p / 2.0 + ri * p
+                    ang = math.degrees(math.atan2(-y, -x)) if (abs(x) + abs(y)) > 1e-6 else 0.0
+                    pockets.append({"x": round(x, 3), "y": round(y, 3), "type": t,
+                                    "bore": round(b, 3), "depth": round(dep, 3),
+                                    "scallop_ang": round(ang, 1)})
+            x_cursor += g["gw"] + COL_GAP
+        y_cursor += r["rl"] + ROW_GAP
+    return pockets, round(outer_w, 3), round(outer_l, 3), rim
 
 # ---------------------------------------------------------------------------
-def check(design, pockets, outer_w, outer_l, rim, top_plane):
-    """Return (ok:bool, issues:list[str], info:dict)."""
-    issues = []
-    warns = []
-    tube_h = top_plane - BASE_T
-
-    # 1. pairwise pocket clearance
-    worst_gap = 1e9
-    for i in range(len(pockets)):
-        for j in range(i + 1, len(pockets)):
-            a, b = pockets[i], pockets[j]
-            d = math.hypot(a["x"] - b["x"], a["y"] - b["y"])
-            gap = d - (a["bore"] + b["bore"]) / 2.0    # plastic between bores
-            worst_gap = min(worst_gap, gap)
-            if gap < MIN_WALL - 1e-6:
-                issues.append(f"pockets {i}&{j} ({a['type']}/{b['type']}) wall {gap:.2f} < {MIN_WALL}")
-
-    # 2. pockets inside perimeter (bore edge + tube wall must clear inner wall face)
+def check(design, pockets, outer_w, outer_l, rim):
+    issues, warns = [], []
     half_w, half_l = outer_w / 2.0, outer_l / 2.0
-    for k, p in enumerate(pockets):
-        r = p["bore"] / 2.0 + PWALL
-        if abs(p["x"]) + r > half_w - WALL + 1e-6:
-            issues.append(f"pocket {k} ({p['type']}) breaches +/-X wall")
-        if abs(p["y"]) + r > half_l - WALL + 1e-6:
-            issues.append(f"pocket {k} ({p['type']}) breaches +/-Y wall")
 
-    # 3. bed fit (tray and lid). lid grows by skirt+gap both sides.
+    worst_web = 1e9
+    nearest = [1e9] * len(pockets)     # nearest tube-edge gap per pocket (for fusion test)
+    for i in range(len(pockets)):
+        a = pockets[i]
+        for j in range(i + 1, len(pockets)):
+            b = pockets[j]
+            d = math.hypot(a["x"] - b["x"], a["y"] - b["y"])
+            web = d - (a["bore"] + b["bore"]) / 2.0
+            worst_web = min(worst_web, web)
+            if web < WEB_MIN - 1e-6:
+                issues.append(f"web {web:.2f} < {WEB_MIN} ({a['type']}&{b['type']})")
+            tube_gap = d - (a["bore"] + b["bore"]) / 2.0 - 2 * PWALL   # <0 => tubes fuse
+            nearest[i] = min(nearest[i], tube_gap)
+            nearest[j] = min(nearest[j], tube_gap)
+
+    # fusion: every pocket must fuse with a neighbour OR reach the wall (no free tube)
+    for k, p in enumerate(pockets):
+        wall_gap = (half_w - WALL) - (abs(p["x"]) + p["bore"] / 2.0 + PWALL)
+        wall_gap_y = (half_l - WALL) - (abs(p["y"]) + p["bore"] / 2.0 + PWALL)
+        fuses_wall = min(wall_gap, wall_gap_y) < 0
+        if nearest[k] > -1e-6 and not fuses_wall:
+            issues.append(f"pocket {k} ({p['type']}) is free-standing (fuses nothing)")
+
+    for k, p in enumerate(pockets):
+        if abs(p["x"]) + p["bore"] / 2.0 > half_w - EDGE_MIN + 1e-6:
+            issues.append(f"pocket {k} ({p['type']}) < {EDGE_MIN}mm from X face")
+        if abs(p["y"]) + p["bore"] / 2.0 > half_l - EDGE_MIN + 1e-6:
+            issues.append(f"pocket {k} ({p['type']}) < {EDGE_MIN}mm from Y face")
+
     lid_w = outer_w + 2 * (LID_GAP + SKIRT_W)
     lid_l = outer_l + 2 * (LID_GAP + SKIRT_W)
     if outer_w > BED_X or outer_l > BED_Y:
-        issues.append(f"tray {outer_w:.0f}x{outer_l:.0f} exceeds bed {BED_X:.0f}x{BED_Y:.0f}")
+        issues.append(f"block {outer_w:.0f}x{outer_l:.0f} exceeds bed")
     if lid_w > BED_X or lid_l > BED_Y:
-        issues.append(f"lid {lid_w:.0f}x{lid_l:.0f} exceeds bed {BED_X:.0f}x{BED_Y:.0f}")
+        issues.append(f"lid {lid_w:.0f}x{lid_l:.0f} exceeds bed")
 
-    # 4. floor / pedestal thickness under each vial (pedestal = tube_h - depth)
-    for k, p in enumerate(pockets):
-        pedestal = tube_h - p["depth"]
-        if pedestal < MIN_FLOOR - 1e-6:
-            issues.append(f"pocket {k} ({p['type']}) pedestal {pedestal:.2f} < {MIN_FLOOR}")
+    if BASE_T < 3.0:
+        issues.append(f"base slab {BASE_T} < 3mm (vials could push through / light leak)")
+    if RECESS < 3.0:
+        issues.append("RECESS < 3mm: vials not shaded / lid may foul")
 
-    # 5. rim covers tallest vial with headroom
-    tallest = max(v["h"] for v in VIAL.values())
-    if rim < BASE_T + MIN_FLOOR + INNER_GAP + tallest + TOP_GAP - 1e-6:
-        issues.append("rim height does not cover tallest vial + headroom")
-
-    # 5b. finger-scallop breach guard: an inward-pointing scallop on a small pocket
-    #     extends ~ (bore*0.55/2) past the tube wall; confirm it clears the perimeter.
-    SC_D = 0.55
     for k, p in enumerate(pockets):
         if p["type"] not in ("1ml", "syr"):
             continue
-        reach = p["bore"] / 2.0 + PWALL + p["bore"] * SC_D / 2.0   # worst outward extent
+        reach = p["bore"] / 2.0 + p["bore"] * 0.5 / 2.0
         ang = math.radians(p["scallop_ang"])
-        sx = p["x"] + reach * math.cos(ang)
-        sy = p["y"] + reach * math.sin(ang)
-        if abs(sx) > half_w - WALL + 1e-6 or abs(sy) > half_l - WALL + 1e-6:
-            issues.append(f"pocket {k} ({p['type']}) scallop breaches perimeter")
+        if abs(p["x"] + reach * math.cos(ang)) > half_w - 2.0 or \
+           abs(p["y"] + reach * math.sin(ang)) > half_l - 2.0:
+            issues.append(f"pocket {k} scallop breaches face")
 
-    # 5c. light-tightness: each vial fully sleeved (tube rim >= vial top)
-    for k, p in enumerate(pockets):
-        tube_rim = top_plane           # tube top (global z)
-        vtop = top_plane - INNER_GAP   # vial top rests INNER_GAP below tube rim
-        if vtop > tube_rim + 1e-6:
-            issues.append(f"pocket {k} ({p['type']}) vial protrudes above its opaque sleeve")
-
-    # 6. wall params sanity
-    if PWALL < 1.2:  warns.append("PWALL < 1.2mm (fragile)")
-    if WALL  < 2.0:  warns.append("perimeter WALL < 2.0mm")
-
-    # 6b. vial seating: every vial top must sit below the rim (won't foul the lid)
-    #     and be recessed enough to be shaded, but not so deep it can't be grabbed.
-    # vial top (global z) = top_plane - INNER_GAP  (same for all classes by construction)
-    vial_top = top_plane - INNER_GAP
-    recess = rim - vial_top
-    if vial_top > rim - 3.0:
-        issues.append(f"vial tops {vial_top:.1f} too close to rim {rim:.1f} (lid foul risk)")
-    if recess > 18.0:
-        warns.append(f"vial recess {recess:.1f}mm deep (retrieval harder; scallops added)")
-
-    # 6c. lid fit: seated skirt clears vial tops, and skirt inner clears the tray wall
-    roof_underside = rim                      # roof sits on the rim when seated
-    lid_clear = roof_underside - vial_top
-    if lid_clear < 2.0:
-        issues.append(f"lid roof clearance over vials {lid_clear:.1f} < 2.0")
-    if LID_GAP < 0.2:
-        warns.append("lid radial gap < 0.2mm (may bind)")
-
-    # 7. aspect ratio warn (printability / handling)
+    if WEB_MIN < 2.4: warns.append("WEB_MIN < 2.4mm (fragile web)")
+    if WEB_MIN > 2 * PWALL: warns.append("web > 2*PWALL: tubes may NOT fuse (free-standing risk)")
     ar = max(outer_w, outer_l) / min(outer_w, outer_l)
-    if ar > 2.2: warns.append(f"aspect ratio {ar:.2f} (long/awkward)")
+    if ar > 2.0: warns.append(f"aspect {ar:.2f} (long)")
 
-    info = {
-        "outer_w": outer_w, "outer_l": outer_l, "rim": rim, "tube_h": tube_h,
-        "lid_w": round(lid_w, 2), "lid_l": round(lid_l, 2),
-        "worst_gap": round(worst_gap, 2), "n_pockets": len(pockets),
-        "aspect": round(ar, 2),
-        "vial_recess": round(rim - (top_plane - INNER_GAP), 2),
-        "lid_clear": round(rim - (top_plane - INNER_GAP), 2),
-    }
+    info = {"outer_w": outer_w, "outer_l": outer_l, "rim": rim,
+            "lid_w": round(lid_w, 1), "lid_l": round(lid_l, 1),
+            "worst_web": round(worst_web, 2), "n": len(pockets),
+            "aspect": round(ar, 2), "recess": RECESS,
+            "worst_fuse": round(max(nearest), 2) if pockets else 0}
     return (len(issues) == 0), issues, warns, info
 
 # ---------------------------------------------------------------------------
-def emit_scad(design, pockets, outer_w, outer_l, rim, top_plane):
+def emit_scad(design, pockets, outer_w, outer_l, rim):
     os.makedirs("build", exist_ok=True)
-    tube_h = top_plane - BASE_T
-    lines = []
-    lines.append(f"// AUTO-GENERATED by layout.py for design {design}. Do not edit by hand.")
-    lines.append(f"DESIGN = \"{design}\";")
-    lines.append(f"OUTER_W = {outer_w};")
-    lines.append(f"OUTER_L = {outer_l};")
-    lines.append(f"RIM_H = {rim};")
-    lines.append(f"TUBE_H = {round(tube_h,3)};")
-    lines.append(f"BASE_T = {BASE_T};")
-    lines.append(f"WALL = {WALL};")
-    lines.append(f"PWALL = {PWALL};")
-    lines.append(f"CORNER_R = {CORNER_R};")
-    lines.append(f"LID_GAP = {LID_GAP};")
-    lines.append(f"SKIRT_W = {SKIRT_W};")
-    lines.append(f"SKIRT_H = {SKIRT_H};")
-    lines.append(f"ROOF_T = {ROOF_T};")
-    lines.append(f"HAND_SLOTS = {'true' if DESIGNS[design]['hand_slots'] else 'false'};")
-    lines.append(f"FINGER_SCALLOP = {'true' if FINGER_SCALLOP else 'false'};")
-    # POCKETS = [ [x, y, bore, depth, is_small(0/1), scallop_angle_deg], ... ]
-    lines.append("POCKETS = [")
+    L = [f"// AUTO-GENERATED by layout.py for design {design}. Merged-tube honeycomb rev.",
+         f"DESIGN = \"{design}\";",
+         f"OUTER_W = {outer_w};", f"OUTER_L = {outer_l};", f"RIM_H = {rim};",
+         f"BASE_T = {BASE_T};", f"WALL = {WALL};", f"PWALL = {PWALL};",
+         f"CORNER_R = {CORNER_R};", f"RECESS = {RECESS};",
+         f"LID_GAP = {LID_GAP};", f"SKIRT_W = {SKIRT_W};", f"SKIRT_H = {SKIRT_H};",
+         f"ROOF_T = {ROOF_T};",
+         f"FINGER_SCALLOP = {'true' if FINGER_SCALLOP else 'false'};",
+         "// POCKETS = [x, y, bore, depth, is_small, scallop_deg]  (cell height = BASE_T+depth)",
+         "POCKETS = ["]
     for p in pockets:
         small = 1 if p["type"] in ("1ml", "syr") else 0
-        lines.append(f"  [{p['x']}, {p['y']}, {p['bore']}, {p['depth']}, {small}, {p['scallop_ang']}],")
-    lines.append("];")
-    with open(f"build/{design}_geom.scad", "w") as f:
-        f.write("\n".join(lines) + "\n")
-    # wrapper part files (never re-assign PART inside vial_vault.scad)
+        L.append(f"  [{p['x']}, {p['y']}, {p['bore']}, {p['depth']}, {small}, {p['scallop_ang']}],")
+    L.append("];")
+    open(f"build/{design}_geom.scad", "w").write("\n".join(L) + "\n")
     for part in ("tray", "lid"):
-        with open(f"build/{design}_{part}.scad", "w") as f:
-            f.write(f"PART = \"{part}\";\n")
-            f.write(f"include <{design}_geom.scad>\n")
-            f.write(f"include <../scad/vial_vault.scad>\n")
+        open(f"build/{design}_{part}.scad", "w").write(
+            f"PART = \"{part}\";\ninclude <{design}_geom.scad>\ninclude <../scad/vial_vault.scad>\n")
 
 # ---------------------------------------------------------------------------
 def run(design, quiet=False):
-    pockets, ow, ol, rim, top_plane = build_pockets(design)
-    ok, issues, warns, info = check(design, pockets, ow, ol, rim, top_plane)
-    emit_scad(design, pockets, ow, ol, rim, top_plane)
+    pockets, ow, ol, rim = build_pockets(design)
+    ok, issues, warns, info = check(design, pockets, ow, ol, rim)
+    emit_scad(design, pockets, ow, ol, rim)
     if not quiet:
-        d = DESIGNS[design]
+        d = DESIGNS[design]; c = counts(design)
+        cs = ", ".join(f"{c.get(k,0)}x{k}" for k in ("30ml", "10ml", "1ml", "syr"))
         print(f"\n=== Design {design}: {d['name']} ===")
-        counts = {}
-        for z in d["zones"]:
-            counts[z[0]] = counts.get(z[0], 0) + z[1]
-        cs = ", ".join(f"{v}x{k}" for k, v in counts.items())
-        print(f"  contents: {cs}")
-        print(f"  tray  : {ow:.1f} x {ol:.1f} x {rim:.1f} mm"
+        print(f"  contents: {cs}   ({info['n']} openings)")
+        print(f"  block : {ow:.1f} x {ol:.1f} x {rim:.1f} mm"
               f"   ({inch(ow):.2f} x {inch(ol):.2f} x {inch(rim):.2f} in)")
         print(f"  lid   : {info['lid_w']:.1f} x {info['lid_l']:.1f} x {ROOF_T+SKIRT_H:.1f} mm"
               f"   ({inch(info['lid_w']):.2f} x {inch(info['lid_l']):.2f} x {inch(ROOF_T+SKIRT_H):.2f} in)")
-        print(f"  pockets: {info['n_pockets']}   min wall between bores: {info['worst_gap']:.2f} mm"
+        print(f"  min web: {info['worst_web']:.2f} mm   tube-fuse margin: {info['worst_fuse']:.2f} mm (<0 = fused)"
               f"   aspect: {info['aspect']}")
-        print(f"  vial top recess below rim: {info['vial_recess']:.1f} mm (shaded, lid clears)")
-        if warns:
-            for w in warns: print(f"  WARN: {w}")
-        if ok:
-            print("  CHECKS: PASS")
-        else:
-            print("  CHECKS: FAIL")
-            for it in issues: print(f"    X {it}")
+        for w in warns: print(f"  WARN: {w}")
+        print("  CHECKS: PASS" if ok else "  CHECKS: FAIL")
+        for it in issues: print(f"    X {it}")
     return ok, info
 
 if __name__ == "__main__":
     arg = sys.argv[1] if len(sys.argv) > 1 else "all"
     targets = ["A", "B", "C"] if arg == "all" else [arg.upper()]
-    all_ok = True
-    for t in targets:
-        ok, _ = run(t)
-        all_ok = all_ok and ok
+    all_ok = all(run(t)[0] for t in targets)
     print()
     sys.exit(0 if all_ok else 1)

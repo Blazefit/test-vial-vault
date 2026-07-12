@@ -25,28 +25,32 @@ forgiving of the unverified OD assumption. Bore mouths are chamfered as a funnel
 **Want it tighter still?** Once you caliper a real vial, you can go to `clear = 1.5`
 (0.75 mm/side) for a nicer fit — but tightening + a wrong OD guess = won't fit, so verify OD first.
 
-## Structural parameters (`tools/layout.py`)
+## Structural parameters — fused honeycomb (`tools/layout.py`)
 
 | Param | Value | Meaning |
 |-------|-------|---------|
-| `PWALL` | 2.0 mm | wall of each individual vial sleeve (this is what keeps light off the vials) |
-| `WALL` | 3.0 mm | outer perimeter wall |
-| `BASE_T` | 3.0 mm | solid base slab |
-| `MIN_WALL` | 2.5 mm | required plastic between two bores (actual min achieved: 4.6 mm) |
-| `MIN_FLOOR` | 4.0 mm | solid pedestal under the deepest (30 mL) vial |
-| `TOP_GAP` | 8.0 mm | recess of vial tops below the rim (→ 10.0 mm actual, shade + lid clearance) |
-| `SKIRT_H` | 15.0 mm | how far the lid skirt grips down over the tray |
-| `LID_GAP` | 0.4 mm | lid-to-tray radial clearance |
+| `PWALL` | 2.0 mm | cell wall. Tubes are packed so walls **overlap ~1 mm and fuse** (2·PWALL > web) |
+| `WEB_MIN` | 3.0 mm | solid between two adjacent bores (the shared, fused honeycomb wall) |
+| `WALL` | 3.0 mm | full-height perimeter wall (darkness + lid seat) |
+| `EDGE_MIN` | 4.5 mm | bore edge → outer face (chosen so edge cells fuse into the wall) |
+| `BASE_T` | 5.0 mm | solid base slab — every vial rests on it; ties all cell bottoms together |
+| `RECESS` | 8.0 mm | vial-top recess below its own cell rim (shade; cell is only vial+8 mm tall) |
+| `ROW_GAP`/`COL_GAP` | 3.0 mm | gaps between grids — ≤ 2·PWALL so cells fuse across them too |
+| `SKIRT_H` | 16.0 mm | how far the lid skirt grips down over the block |
+| `LID_GAP` | 0.4 mm | lid-to-block radial clearance |
 | `BED_X × BED_Y` | 220 × 220 mm | usable print bed (edit to your printer) |
+
+**Structure check:** `tube-fuse margin` reports the worst-case nearest-neighbour tube overlap;
+`−1.0 mm` means every cell overlaps a neighbour (or the wall) — no free-standing tubes.
 
 ## Final envelope sizes (mm / inches)
 
-| Design | Contents | Tray W × L × H (mm) | Tray (in) | Lid W × L × H (mm) | Lid (in) | ~PETG (tray+lid) |
+| Design | Contents | Block W × L × H (mm) | Block (in) | Lid W × L × H (mm) | Lid (in) | ~PETG (tray+lid) |
 |--------|----------|---------------------|-----------|--------------------|----------|------------------|
-| **A — Compact Slab** | 4×10 mL, 2×30 mL, 8×1 mL, 2×2 syr | 131.8 × 180.2 × 95.0 | 5.19 × 7.09 × 3.74 | 137.4 × 185.8 × 17.4 | 5.41 × 7.31 × 0.69 | ~308 g |
-| **B — Caddy (grips)** | 5×10 mL, 2×30 mL, 10×1 mL, 2×2 syr | 161.4 × 180.2 × 95.0 | 6.35 × 7.09 × 3.74 | 167.0 × 185.8 × 17.4 | 6.57 × 7.31 × 0.69 | ~357 g |
-| **C — Max Vault** | 6×10 mL, 3×30 mL, 12×1 mL, 2×2 syr | 191.0 × 180.2 × 95.0 | 7.52 × 7.09 × 3.74 | 196.6 × 185.8 × 17.4 | 7.74 × 7.31 × 0.69 | ~418 g |
+| **A — Compact** | 6×10 mL, 3×30 mL, 24×1 mL, 4 syr | 156 × 166 × 91 | 6.14 × 6.54 × 3.58 | 162 × 172 × 18.6 | 6.38 × 6.77 × 0.73 | ~300 g |
+| **B — Standard** | 8×10 mL, 4×30 mL, 30×1 mL, 4 syr | 192 × 166 × 91 | 7.56 × 6.54 × 3.58 | 198 × 172 × 18.6 | 7.80 × 6.77 × 0.73 | ~370 g |
+| **C — Max** | 10×10 mL, 5×30 mL, 36×1 mL, 6 syr | 204 × 188 × 91 | 8.03 × 7.40 × 3.58 | 210 × 194 × 18.6 | 8.27 × 7.64 × 0.73 | ~440 g |
 
-All three are **95 mm (3.74 in) tall** — intentionally taller than the fridge holders so the
-30 mL vials stand fully enclosed. Every tray + its lid fits a 220 mm bed. Mass is a
-conservative estimate at 15 % infill; real prints will likely be lighter.
+All three are **91 mm (3.58 in) tall** (set by the 30 mL vial). Shorter vials get shorter cells
+inside, so the block is much lighter than a solid one. Every block + its lid fits a 220 mm bed.
+Mass is a rough estimate at 15 % infill — slice it for the real number.
